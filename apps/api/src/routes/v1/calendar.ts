@@ -70,6 +70,33 @@ const calendarRoutes: FastifyPluginAsync = async (fastify) => {
     return { status: "ok" };
   });
 
+  fastify.get("/v1/calendar/:plan_id/status", async (request) => {
+    const userId = request.userId as string;
+    const planId = (request.params as { plan_id: string }).plan_id;
+
+    const { data, error } = await supabaseAdmin
+      .from("calendar_syncs")
+      .select("*")
+      .eq("plan_id", planId)
+      .single();
+
+    if (error) {
+      return fastify.httpErrors.internalServerError(error.message);
+    }
+
+    const { data: plan } = await supabaseAdmin
+      .from("plans")
+      .select("user_id")
+      .eq("id", planId)
+      .single();
+
+    if (plan?.user_id !== userId) {
+      return fastify.httpErrors.unauthorized("Unauthorized");
+    }
+
+    return { status: data };
+  });
+
   fastify.post("/v1/calendar/:plan_id/sync", async (request) => {
     const userId = request.userId as string;
     const planId = (request.params as { plan_id: string }).plan_id;

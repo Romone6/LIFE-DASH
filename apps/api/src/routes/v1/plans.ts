@@ -7,6 +7,7 @@ import { persistAuditReport, updatePlanAuditStatus } from "../../auditor/persist
 import { applyEvidenceGate } from "../../planner/evidenceGate";
 import { supabaseAdmin } from "../../supabase";
 import { computeGovernorState } from "../../governor/engine";
+import { generateStabilityPlan } from "../../planner/stabilityPlan";
 
 const planRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/v1/plans/:date/generate", async (request) => {
@@ -27,6 +28,20 @@ const planRoutes: FastifyPluginAsync = async (fastify) => {
       commitments: inputData.commitments,
       governor_state: governorState
     };
+
+    if (governorState.zone === "CRITICAL") {
+      const base = generateStabilityPlan(plannerInput as any);
+      const plans = [
+        { ...base, mode: "A" },
+        { ...base, mode: "B", plan_id: `${base.plan_id}-B` },
+        { ...base, mode: "C", plan_id: `${base.plan_id}-C` }
+      ];
+      const persisted = await persistPlans(userId, dateLocal, plannerInput.timezone, plans);
+      for (const plan of plans) {
+        await updatePlanAuditStatus(plan.plan_id, "PASS_WITH_WARNINGS", plan.mode === "A");
+      }
+      return { plans: persisted, stability: true };
+    }
 
     let lastError: string | null = null;
     for (let attempt = 0; attempt < 3; attempt += 1) {

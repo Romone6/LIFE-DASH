@@ -1,0 +1,13 @@
+{
+  "name": "lifeos",
+  "private": true,
+  "packageManager": "pnpm@10.27.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint"
+  }
+}

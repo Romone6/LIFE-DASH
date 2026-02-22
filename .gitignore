@@ -1,0 +1,13 @@
+node_modules
+.DS_Store
+.env.local
+.env.production
+.env
+.pnpm-store
+apps/web/.next
+apps/web/out
+apps/api/dist
+packages/**/dist
+apps/android/.gradle
+apps/android/build
+apps/android/app/build

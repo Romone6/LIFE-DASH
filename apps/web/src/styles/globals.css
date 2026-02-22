@@ -1,0 +1,226 @@
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=IBM+Plex+Mono:wght@300;500&display=swap");
+
+:root {
+  color-scheme: dark;
+  --bg: #0a0d12;
+  --panel: #10141c;
+  --border: rgba(120, 180, 255, 0.15);
+  --text: #e6edf6;
+  --muted: #8aa0b8;
+  --cyan: #4fe3ff;
+  --lime: #b0ff4f;
+  --amber: #ffbf4f;
+  --crimson: #ff4f6a;
+  --violet: #a44bff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.lab-root {
+  min-height: 100vh;
+  position: relative;
+  padding: 24px 28px 32px;
+  overflow: hidden;
+}
+
+.mesh {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(79, 227, 255, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(164, 75, 255, 0.08), transparent 40%),
+    radial-gradient(circle at 30% 80%, rgba(176, 255, 79, 0.06), transparent 40%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.lab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.lab-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+
+.lab-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.lab-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 12px rgba(176, 255, 79, 0.6);
+}
+
+.lab-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.control {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.control label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.control input {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.mode-toggle button,
+.action-row button {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.mode-toggle button.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 10px rgba(79, 227, 255, 0.3);
+}
+
+.lab-grid {
+  display: grid;
+  grid-template-columns: 20% 55% 25%;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  min-height: 420px;
+}
+
+.panel-title {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.panel-block {
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.panel-mono {
+  font-size: 12px;
+  color: var(--cyan);
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.block-card {
+  background: rgba(12, 16, 24, 0.8);
+  border: 1px solid rgba(79, 227, 255, 0.2);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.block-title {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.block-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.block-time {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.empty {
+  color: var(--muted);
+}
+
+.risk-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ring {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(164, 75, 255, 0.5);
+  box-shadow: 0 0 20px rgba(164, 75, 255, 0.4);
+  animation: rotate 12s linear infinite;
+}
+
+.ring-label {
+  font-size: 12px;
+  color: var(--violet);
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

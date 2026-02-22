@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import TwinCanvas from "../components/TwinCanvas";
+import TerrainCanvas from "../components/TerrainCanvas";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
 
@@ -92,6 +94,9 @@ export default function DashboardPage() {
           <div className="panel-title">System Controls</div>
           <div className="panel-block">Calendar Sync: {active?.plan_json ? "Ready" : "--"}</div>
           <div className="panel-block">Audit Status: {active?.audit_status ?? "--"}</div>
+          <div className="panel-title">Capital Simulation</div>
+          <div className="panel-block">Runway: --</div>
+          <div className="panel-block">Surplus: --</div>
           <div className="panel-block">AI Run Metadata</div>
           <div className="panel-mono">Prompt: planner-v1</div>
         </aside>
@@ -103,6 +108,10 @@ export default function DashboardPage() {
               <div key={block.block_id} className="block-card">
                 <div className="block-title">{block.title}</div>
                 <div className="block-meta">{block.type}</div>
+                <div className="block-meta">
+                  Confidence: {block.confidence_level ?? "LOW"}{" "}
+                  {block.evidence_refs?.length ? "• Evidence" : ""}
+                </div>
                 <div className="block-time">
                   {block.start_at} → {block.end_at}
                 </div>
@@ -118,8 +127,14 @@ export default function DashboardPage() {
             <div className="ring" />
             <div className="ring-label">Stability</div>
           </div>
+          <div className="panel-title">Digital Twin</div>
+          <TwinCanvas />
+          <div className="panel-title">Goal Terrain</div>
+          <TerrainCanvas />
           <div className="panel-title">Audit Viewer</div>
           <div className="panel-block">Warnings: --</div>
+          <div className="panel-title">Experiments</div>
+          <div className="panel-block">Active: --</div>
           <div className="panel-title">Calendar Sync</div>
           <div className="panel-block">Last sync: --</div>
         </aside>

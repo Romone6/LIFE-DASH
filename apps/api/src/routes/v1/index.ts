@@ -11,6 +11,7 @@ import terrainRoutes from "./terrain";
 import experimentRoutes from "./experiments";
 import strategicRoutes from "./strategic";
 import capitalRoutes from "./capital";
+import goalRoutes from "./goals";
 
 const v1Routes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/v1/status", async (request) => {
@@ -29,6 +30,7 @@ const v1Routes: FastifyPluginAsync = async (fastify) => {
   fastify.register(experimentRoutes);
   fastify.register(strategicRoutes);
   fastify.register(capitalRoutes);
+  fastify.register(goalRoutes);
 };
 
 export default v1Routes;

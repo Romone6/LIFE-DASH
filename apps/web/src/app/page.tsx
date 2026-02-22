@@ -13,6 +13,8 @@ type PlanRow = {
   plan_json: any;
 };
 
+type CalendarItem = { id: string; summary: string };
+
 export default function DashboardPage() {
   const [userId, setUserId] = useState("");
   const [plans, setPlans] = useState<PlanRow[]>([]);
@@ -23,6 +25,14 @@ export default function DashboardPage() {
   const [capital, setCapital] = useState<any>(null);
   const [experiments, setExperiments] = useState<any[]>([]);
   const [calendarStatus, setCalendarStatus] = useState<any>(null);
+  const [calendars, setCalendars] = useState<CalendarItem[]>([]);
+  const [selectedCalendar, setSelectedCalendar] = useState<string>("");
+  const [evidence, setEvidence] = useState<any[]>([]);
+
+  const [incomeTitle, setIncomeTitle] = useState("");
+  const [incomeAmount, setIncomeAmount] = useState("");
+  const [expenseCategory, setExpenseCategory] = useState("");
+  const [expenseAmount, setExpenseAmount] = useState("");
 
   const dateLocal = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -67,6 +77,11 @@ export default function DashboardPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((payload) => setCapital(payload?.simulation ?? null))
       .catch(() => setCapital(null));
+
+    fetch(`${API_BASE}/v1/evidence`, { headers: { "x-user-id": userId } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((payload) => setEvidence(payload?.evidence ?? []))
+      .catch(() => setEvidence([]));
   };
 
   useEffect(() => {
@@ -121,6 +136,81 @@ export default function DashboardPage() {
     });
     fetchPlans();
   };
+
+  const fetchCalendars = async () => {
+    if (!userId) return;
+    const res = await fetch(`${API_BASE}/v1/calendar/list`, { headers: { "x-user-id": userId } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const items = (data.items ?? []).map((item: any) => ({ id: item.id, summary: item.summary }));
+    setCalendars(items);
+  };
+
+  const selectCalendar = async () => {
+    if (!userId || !selectedCalendar) return;
+    await fetch(`${API_BASE}/v1/calendar/select`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-user-id": userId },
+      body: JSON.stringify({ calendar_id: selectedCalendar })
+    });
+  };
+
+  const approveExperiment = async (id: string) => {
+    if (!userId) return;
+    await fetch(`${API_BASE}/v1/experiments/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-user-id": userId },
+      body: JSON.stringify({ experiment_id: id })
+    });
+    fetchPlans();
+  };
+
+  const abortExperiment = async (id: string) => {
+    if (!userId) return;
+    await fetch(`${API_BASE}/v1/experiments/abort`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-user-id": userId },
+      body: JSON.stringify({ experiment_id: id })
+    });
+    fetchPlans();
+  };
+
+  const addIncome = async () => {
+    if (!userId) return;
+    await fetch(`${API_BASE}/v1/capital/income`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-user-id": userId },
+      body: JSON.stringify({
+        source_id: crypto.randomUUID(),
+        title: incomeTitle,
+        amount_monthly: Number(incomeAmount || 0),
+        stability_score: 1,
+        volatility_flag: false
+      })
+    });
+    setIncomeTitle("");
+    setIncomeAmount("");
+    fetchPlans();
+  };
+
+  const addExpense = async () => {
+    if (!userId) return;
+    await fetch(`${API_BASE}/v1/capital/expense`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-user-id": userId },
+      body: JSON.stringify({
+        expense_id: crypto.randomUUID(),
+        category: expenseCategory,
+        amount_monthly: Number(expenseAmount || 0),
+        fixed_flag: true
+      })
+    });
+    setExpenseCategory("");
+    setExpenseAmount("");
+    fetchPlans();
+  };
+
+  const evidenceById = new Map(evidence.map((e) => [e.id, e]));
 
   return (
     <div className="lab-root">
@@ -179,6 +269,46 @@ export default function DashboardPage() {
           <div className="panel-title">Capital Simulation</div>
           <div className="panel-block">Runway: {capital?.runwayMonths?.toFixed?.(1) ?? "--"} months</div>
           <div className="panel-block">Surplus: {capital?.surplus ?? "--"}</div>
+          <div className="panel-block input-grid">
+            <input
+              placeholder="Income title"
+              value={incomeTitle}
+              onChange={(e) => setIncomeTitle(e.target.value)}
+            />
+            <input
+              placeholder="Amount"
+              value={incomeAmount}
+              onChange={(e) => setIncomeAmount(e.target.value)}
+            />
+            <button onClick={addIncome}>Add Income</button>
+          </div>
+          <div className="panel-block input-grid">
+            <input
+              placeholder="Expense category"
+              value={expenseCategory}
+              onChange={(e) => setExpenseCategory(e.target.value)}
+            />
+            <input
+              placeholder="Amount"
+              value={expenseAmount}
+              onChange={(e) => setExpenseAmount(e.target.value)}
+            />
+            <button onClick={addExpense}>Add Expense</button>
+          </div>
+          <div className="panel-title">Calendar Selection</div>
+          <div className="panel-block">
+            <button onClick={fetchCalendars}>List Calendars</button>
+            <select
+              value={selectedCalendar}
+              onChange={(e) => setSelectedCalendar(e.target.value)}
+            >
+              <option value="">Select calendar</option>
+              {calendars.map((c) => (
+                <option key={c.id} value={c.id}>{c.summary}</option>
+              ))}
+            </select>
+            <button onClick={selectCalendar}>Use Calendar</button>
+          </div>
           <div className="panel-block">AI Run Metadata</div>
           <div className="panel-mono">Prompt: planner-v1</div>
         </aside>
@@ -197,6 +327,16 @@ export default function DashboardPage() {
                 <div className="block-time">
                   {block.start_at} → {block.end_at}
                 </div>
+                {block.evidence_refs?.length ? (
+                  <div className="evidence-list">
+                    {block.evidence_refs.map((id: string) => (
+                      <div key={id} className="evidence-card">
+                        <div>{evidenceById.get(id)?.title ?? id}</div>
+                        <div className="block-meta">{evidenceById.get(id)?.study_type ?? ""}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ))}
             {!active && <div className="empty">No plan loaded</div>}
@@ -219,6 +359,18 @@ export default function DashboardPage() {
           <div className="panel-block">
             Active: {experiments.filter((e) => e.status === "ACTIVE").length}
           </div>
+          {experiments.filter((e) => e.status === "PROPOSED").map((exp) => (
+            <div key={exp.id} className="panel-block">
+              <div>{exp.hypothesis}</div>
+              <button onClick={() => approveExperiment(exp.id)}>Approve</button>
+            </div>
+          ))}
+          {experiments.filter((e) => e.status === "ACTIVE").map((exp) => (
+            <div key={exp.id} className="panel-block">
+              <div>{exp.hypothesis}</div>
+              <button onClick={() => abortExperiment(exp.id)}>Abort</button>
+            </div>
+          ))}
           <div className="panel-title">Calendar Sync</div>
           <div className="panel-block">Last sync: {calendarStatus?.last_sync_at ?? "--"}</div>
         </aside>

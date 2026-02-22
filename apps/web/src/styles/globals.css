@@ -25,6 +25,23 @@ body {
   font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
+button {
+  font-family: inherit;
+}
+
+input, select {
+  font-family: inherit;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+select {
+  width: 100%;
+}
+
 .lab-root {
   min-height: 100vh;
   position: relative;
@@ -103,11 +120,6 @@ body {
 
 .control input {
   width: 100%;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 8px;
-  border-radius: 6px;
 }
 
 .mode-toggle {
@@ -116,7 +128,8 @@ body {
 }
 
 .mode-toggle button,
-.action-row button {
+.action-row button,
+.panel-block button {
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
@@ -129,6 +142,12 @@ body {
   border-color: var(--cyan);
   color: var(--cyan);
   box-shadow: 0 0 10px rgba(79, 227, 255, 0.3);
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .lab-grid {
@@ -160,6 +179,8 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   margin-bottom: 10px;
+  display: grid;
+  gap: 6px;
 }
 
 .panel-mono {
@@ -193,6 +214,24 @@ body {
 .block-time {
   font-size: 10px;
   color: var(--muted);
+}
+
+.evidence-list {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.evidence-card {
+  border: 1px solid rgba(79, 227, 255, 0.15);
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.input-grid {
+  display: grid;
+  gap: 6px;
 }
 
 .empty {

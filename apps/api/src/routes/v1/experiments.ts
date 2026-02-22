@@ -56,6 +56,23 @@ const experimentRoutes: FastifyPluginAsync = async (fastify) => {
 
     return { status: "ok" };
   });
+
+  fastify.post("/v1/experiments/approve", async (request) => {
+    const userId = request.userId as string;
+    const body = request.body as { experiment_id: string };
+
+    const { error } = await supabaseAdmin
+      .from("experiments")
+      .update({ status: "ACTIVE", started_at: new Date().toISOString() })
+      .eq("id", body.experiment_id)
+      .eq("user_id", userId);
+
+    if (error) {
+      return fastify.httpErrors.internalServerError(error.message);
+    }
+
+    return { status: "ok" };
+  });
 };
 
 export default experimentRoutes;

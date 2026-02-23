@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const [calendars, setCalendars] = useState<CalendarItem[]>([]);
   const [selectedCalendar, setSelectedCalendar] = useState<string>("");
   const [evidence, setEvidence] = useState<any[]>([]);
+  const [twinState, setTwinState] = useState<any>(null);
 
   const [incomeTitle, setIncomeTitle] = useState("");
   const [incomeAmount, setIncomeAmount] = useState("");
@@ -131,6 +132,11 @@ export default function DashboardPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((payload) => setEvidence(payload?.evidence ?? []))
       .catch(() => setEvidence([]));
+
+    fetch(`${API_BASE}/v1/twin`, { headers: { "x-user-id": userId } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((payload) => setTwinState(payload?.twin ?? null))
+      .catch(() => setTwinState(null));
   }, [dateLocal, mode, userId]);
 
   useEffect(() => {
@@ -530,7 +536,7 @@ export default function DashboardPage() {
             <div className="ring-label">Stability</div>
           </div>
           <div className="panel-title">Digital Twin</div>
-          <TwinCanvas />
+          <TwinCanvas recoveryHours={twinState?.recovery_hours ?? 96} />
           <div className="panel-title">Goal Terrain</div>
           <TerrainCanvas />
           <div className="panel-title">Audit Viewer</div>

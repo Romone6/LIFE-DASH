@@ -1,8 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { getRecoveryColor } from "../lib/recoveryColor";
 
-export default function TwinCanvas() {
+type TwinCanvasProps = {
+  recoveryHours?: number;
+};
+
+export default function TwinCanvas({ recoveryHours = 96 }: TwinCanvasProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,7 +32,7 @@ export default function TwinCanvas() {
 
       const geometry = new THREE.IcosahedronGeometry(1.2, 1);
       const material = new THREE.MeshStandardMaterial({
-        color: 0x5b6bff,
+        color: new THREE.Color(getRecoveryColor(recoveryHours)),
         wireframe: true
       });
       const mesh = new THREE.Mesh(geometry, material);
@@ -53,7 +58,7 @@ export default function TwinCanvas() {
         mount.removeChild(mount.firstChild);
       }
     };
-  }, []);
+  }, [recoveryHours]);
 
   return <div ref={ref} style={{ width: "100%", height: "220px" }} />;
 }

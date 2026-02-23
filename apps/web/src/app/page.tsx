@@ -33,8 +33,57 @@ export default function DashboardPage() {
   const [incomeAmount, setIncomeAmount] = useState("");
   const [expenseCategory, setExpenseCategory] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(0);
+  const [wizardStatus, setWizardStatus] = useState("Idle");
+  const [wizardErrors, setWizardErrors] = useState<Record<string, string>>({});
+  const [wizardMode, setWizardMode] = useState("A");
+  const [wizardGenerated, setWizardGenerated] = useState(false);
+  const [wizardPreview, setWizardPreview] = useState<PlanRow | null>(null);
+  const [nonNegotiableInput, setNonNegotiableInput] = useState("");
+  const [wizardData, setWizardData] = useState({
+    profile: {
+      sleep_window: { start: "23:00", end: "07:00", hard_flag: true },
+      preferences: { aggression_level: 0.6, deep_work_preference: "morning", meal_count: 3 },
+      non_negotiables: [] as string[]
+    },
+    goals: [
+      {
+        id: crypto.randomUUID(),
+        title: "",
+        priority_weight: 0.8,
+        deadline_date: "",
+        success_metric: ""
+      }
+    ],
+    commitments: [] as {
+      id: string;
+      title: string;
+      start_at: string;
+      end_at: string;
+      recurrence_rule: string;
+      hard_flag: boolean;
+    }[]
+  });
 
   const dateLocal = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("lifeos_user_id");
+    const done = localStorage.getItem("lifeos_wizard_complete");
+    if (storedUser && !userId) {
+      setUserId(storedUser);
+    }
+    if (!done) {
+      setWizardOpen(true);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      localStorage.setItem("lifeos_user_id", userId);
+    }
+  }, [userId]);
 
   const fetchPlans = useCallback(async () => {
     if (!userId) return;
@@ -210,6 +259,134 @@ export default function DashboardPage() {
     fetchPlans();
   };
 
+  const validateProfile = () => {
+    const errors: Record<string, string> = {};
+    if (!userId) errors.userId = "User ID is required.";
+    if (!wizardData.profile.sleep_window.start) errors.sleepStart = "Start time required.";
+    if (!wizardData.profile.sleep_window.end) errors.sleepEnd = "End time required.";
+    if (!wizardData.profile.preferences.meal_count) errors.mealCount = "Meal count required.";
+    return errors;
+  };
+
+  const validateGoals = () => {
+    const errors: Record<string, string> = {};
+    const completeGoals = wizardData.goals.filter(
+      (goal) => goal.title && goal.deadline_date && goal.success_metric
+    );
+    if (completeGoals.length === 0) {
+      errors.goals = "Add at least one complete goal.";
+    }
+    return errors;
+  };
+
+  const validateCommitments = () => {
+    const errors: Record<string, string> = {};
+    const hasPartial = wizardData.commitments.some(
+      (c) => (c.title || c.start_at || c.end_at || c.recurrence_rule) && !(c.title && c.start_at && c.end_at)
+    );
+    if (hasPartial) {
+      errors.commitments = "Each commitment requires title, start, and end.";
+    }
+    return errors;
+  };
+
+  const loadPreview = useCallback(
+    async (nextMode: string) => {
+      if (!userId) return;
+      const res = await fetch(`${API_BASE}/v1/plans/${dateLocal}?mode=${nextMode}`, {
+        headers: { "x-user-id": userId }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setWizardPreview((data.plans ?? [])[0] ?? null);
+    },
+    [dateLocal, userId]
+  );
+
+  const nextWizardStep = async () => {
+    let errors: Record<string, string> = {};
+    if (wizardStep === 0) errors = validateProfile();
+    if (wizardStep === 1) errors = validateGoals();
+    if (wizardStep === 2) errors = validateCommitments();
+    setWizardErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+    setWizardStep((step) => Math.min(step + 1, 3));
+  };
+
+  const prevWizardStep = () => {
+    setWizardStep((step) => Math.max(step - 1, 0));
+    setWizardGenerated(false);
+    setWizardPreview(null);
+    setWizardStatus("Idle");
+  };
+
+  const generateWizardPlan = async () => {
+    if (!userId) return;
+    setWizardStatus("Saving...");
+    setWizardErrors({});
+    const cleanedGoals = wizardData.goals
+      .filter((goal) => goal.title && goal.deadline_date && goal.success_metric)
+      .map((goal) => ({
+        ...goal,
+        priority_weight: Number(goal.priority_weight)
+      }));
+    const cleanedCommitments = wizardData.commitments
+      .filter((c) => c.title && c.start_at && c.end_at)
+      .map((c) => ({
+        ...c,
+        start_at: new Date(c.start_at).toISOString(),
+        end_at: new Date(c.end_at).toISOString()
+      }));
+
+    const profileRes = await fetch(`${API_BASE}/v1/profile/upsert`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-id": userId
+      },
+      body: JSON.stringify({
+        profile: wizardData.profile,
+        goals: cleanedGoals,
+        commitments: cleanedCommitments
+      })
+    });
+
+    if (!profileRes.ok) {
+      setWizardStatus("Error");
+      setWizardErrors({ api: "Failed to save profile data." });
+      return;
+    }
+
+    setWizardStatus("Generating...");
+    const planRes = await fetch(`${API_BASE}/v1/plans/${dateLocal}/generate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-id": userId
+      },
+      body: JSON.stringify({ timezone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+    });
+
+    if (!planRes.ok) {
+      setWizardStatus("Error");
+      setWizardErrors({ api: "Plan generation failed. Try again." });
+      return;
+    }
+
+    setWizardGenerated(true);
+    setWizardStatus("Preview ready");
+    await loadPreview(wizardMode);
+  };
+
+  const completeWizard = () => {
+    localStorage.setItem("lifeos_wizard_complete", "true");
+    setWizardOpen(false);
+    setWizardGenerated(false);
+    setWizardStep(0);
+    setMode(wizardMode);
+    fetchPlans();
+  };
+
   const evidenceById = new Map(evidence.map((e) => [e.id, e]));
 
   return (
@@ -220,9 +397,12 @@ export default function DashboardPage() {
           <div className="lab-title">LifeOS AI Lab Console</div>
           <div className="lab-subtitle">Strategic Command Interface</div>
         </div>
-        <div className="lab-status">
-          <span className="status-dot" />
-          {status}
+        <div className="lab-header-actions">
+          <div className="lab-status">
+            <span className="status-dot" />
+            {status}
+          </div>
+          <button className="ghost" onClick={() => setWizardOpen(true)}>Setup Wizard</button>
         </div>
       </header>
 
@@ -375,6 +555,456 @@ export default function DashboardPage() {
           <div className="panel-block">Last sync: {calendarStatus?.last_sync_at ?? "--"}</div>
         </aside>
       </main>
+
+      {wizardOpen && (
+        <div className="wizard-overlay">
+          <div className="wizard-card">
+            <div className="wizard-header">
+              <div>
+                <div className="wizard-title">System Initialization Wizard</div>
+                <div className="wizard-subtitle">Create your first profile and plan</div>
+              </div>
+              <div className="wizard-stepper">Step {wizardStep + 1} / 4</div>
+            </div>
+
+            <div className="wizard-body">
+              {wizardStep === 0 && (
+                <div className="wizard-grid">
+                  <div className="wizard-field">
+                    <label>User ID</label>
+                    <div className="wizard-inline">
+                      <input
+                        value={userId}
+                        onChange={(e) => setUserId(e.target.value)}
+                        placeholder="uuid"
+                      />
+                      <button onClick={() => setUserId(crypto.randomUUID())}>Generate</button>
+                    </div>
+                    {wizardErrors.userId && <div className="wizard-error">{wizardErrors.userId}</div>}
+                  </div>
+                  <div className="wizard-field">
+                    <label>Sleep Window</label>
+                    <div className="wizard-inline">
+                      <input
+                        type="time"
+                        value={wizardData.profile.sleep_window.start}
+                        onChange={(e) =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            profile: {
+                              ...prev.profile,
+                              sleep_window: { ...prev.profile.sleep_window, start: e.target.value }
+                            }
+                          }))
+                        }
+                      />
+                      <input
+                        type="time"
+                        value={wizardData.profile.sleep_window.end}
+                        onChange={(e) =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            profile: {
+                              ...prev.profile,
+                              sleep_window: { ...prev.profile.sleep_window, end: e.target.value }
+                            }
+                          }))
+                        }
+                      />
+                    </div>
+                    {(wizardErrors.sleepStart || wizardErrors.sleepEnd) && (
+                      <div className="wizard-error">Sleep window required.</div>
+                    )}
+                  </div>
+                  <div className="wizard-field">
+                    <label>Aggression Level</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={wizardData.profile.preferences.aggression_level}
+                      onChange={(e) =>
+                        setWizardData((prev) => ({
+                          ...prev,
+                          profile: {
+                            ...prev.profile,
+                            preferences: {
+                              ...prev.profile.preferences,
+                              aggression_level: Number(e.target.value)
+                            }
+                          }
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="wizard-field">
+                    <label>Deep Work Preference</label>
+                    <select
+                      value={wizardData.profile.preferences.deep_work_preference}
+                      onChange={(e) =>
+                        setWizardData((prev) => ({
+                          ...prev,
+                          profile: {
+                            ...prev.profile,
+                            preferences: {
+                              ...prev.profile.preferences,
+                              deep_work_preference: e.target.value
+                            }
+                          }
+                        }))
+                      }
+                    >
+                      <option value="morning">Morning</option>
+                      <option value="afternoon">Afternoon</option>
+                      <option value="evening">Evening</option>
+                    </select>
+                  </div>
+                  <div className="wizard-field">
+                    <label>Meal Count</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="6"
+                      value={wizardData.profile.preferences.meal_count}
+                      onChange={(e) =>
+                        setWizardData((prev) => ({
+                          ...prev,
+                          profile: {
+                            ...prev.profile,
+                            preferences: {
+                              ...prev.profile.preferences,
+                              meal_count: Number(e.target.value)
+                            }
+                          }
+                        }))
+                      }
+                    />
+                    {wizardErrors.mealCount && <div className="wizard-error">{wizardErrors.mealCount}</div>}
+                  </div>
+                  <div className="wizard-field">
+                    <label>Non-negotiables</label>
+                    <div className="wizard-inline">
+                      <input
+                        value={nonNegotiableInput}
+                        onChange={(e) => setNonNegotiableInput(e.target.value)}
+                        placeholder="Gym, family dinner..."
+                      />
+                      <button
+                        onClick={() => {
+                          if (!nonNegotiableInput.trim()) return;
+                          setWizardData((prev) => ({
+                            ...prev,
+                            profile: {
+                              ...prev.profile,
+                              non_negotiables: [
+                                ...prev.profile.non_negotiables,
+                                nonNegotiableInput.trim()
+                              ]
+                            }
+                          }));
+                          setNonNegotiableInput("");
+                        }}
+                      >
+                        Add
+                      </button>
+                    </div>
+                    <div className="chip-row">
+                      {wizardData.profile.non_negotiables.map((item) => (
+                        <button
+                          key={item}
+                          className="chip"
+                          onClick={() =>
+                            setWizardData((prev) => ({
+                              ...prev,
+                              profile: {
+                                ...prev.profile,
+                                non_negotiables: prev.profile.non_negotiables.filter((n) => n !== item)
+                              }
+                            }))
+                          }
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {wizardStep === 1 && (
+                <div className="wizard-list">
+                  <div className="wizard-list-header">
+                    <div className="wizard-label">Goals</div>
+                    <button
+                      onClick={() =>
+                        setWizardData((prev) => ({
+                          ...prev,
+                          goals: [
+                            ...prev.goals,
+                            {
+                              id: crypto.randomUUID(),
+                              title: "",
+                              priority_weight: 0.8,
+                              deadline_date: "",
+                              success_metric: ""
+                            }
+                          ]
+                        }))
+                      }
+                    >
+                      + Add Goal
+                    </button>
+                  </div>
+                  {wizardErrors.goals && <div className="wizard-error">{wizardErrors.goals}</div>}
+                  {wizardData.goals.map((goal, idx) => (
+                    <div key={goal.id} className="wizard-row">
+                      <input
+                        placeholder="Goal title"
+                        value={goal.title}
+                        onChange={(e) =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            goals: prev.goals.map((item, i) =>
+                              i === idx ? { ...item, title: e.target.value } : item
+                            )
+                          }))
+                        }
+                      />
+                      <input
+                        type="date"
+                        value={goal.deadline_date}
+                        onChange={(e) =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            goals: prev.goals.map((item, i) =>
+                              i === idx ? { ...item, deadline_date: e.target.value } : item
+                            )
+                          }))
+                        }
+                      />
+                      <input
+                        placeholder="Success metric"
+                        value={goal.success_metric}
+                        onChange={(e) =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            goals: prev.goals.map((item, i) =>
+                              i === idx ? { ...item, success_metric: e.target.value } : item
+                            )
+                          }))
+                        }
+                      />
+                      <div className="wizard-inline">
+                        <label>Priority</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={goal.priority_weight}
+                          onChange={(e) =>
+                            setWizardData((prev) => ({
+                              ...prev,
+                              goals: prev.goals.map((item, i) =>
+                                i === idx
+                                  ? { ...item, priority_weight: Number(e.target.value) }
+                                  : item
+                              )
+                            }))
+                          }
+                        />
+                      </div>
+                      <button
+                        className="ghost"
+                        onClick={() =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            goals: prev.goals.filter((_, i) => i !== idx)
+                          }))
+                        }
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {wizardStep === 2 && (
+                <div className="wizard-list">
+                  <div className="wizard-list-header">
+                    <div className="wizard-label">Commitments</div>
+                    <button
+                      onClick={() =>
+                        setWizardData((prev) => ({
+                          ...prev,
+                          commitments: [
+                            ...prev.commitments,
+                            {
+                              id: crypto.randomUUID(),
+                              title: "",
+                              start_at: "",
+                              end_at: "",
+                              recurrence_rule: "",
+                              hard_flag: true
+                            }
+                          ]
+                        }))
+                      }
+                    >
+                      + Add Commitment
+                    </button>
+                  </div>
+                  {wizardErrors.commitments && (
+                    <div className="wizard-error">{wizardErrors.commitments}</div>
+                  )}
+                  {wizardData.commitments.length === 0 && (
+                    <div className="wizard-muted">No commitments added.</div>
+                  )}
+                  {wizardData.commitments.map((commitment, idx) => (
+                    <div key={commitment.id} className="wizard-row">
+                      <input
+                        placeholder="Commitment title"
+                        value={commitment.title}
+                        onChange={(e) =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            commitments: prev.commitments.map((item, i) =>
+                              i === idx ? { ...item, title: e.target.value } : item
+                            )
+                          }))
+                        }
+                      />
+                      <input
+                        type="datetime-local"
+                        value={commitment.start_at}
+                        onChange={(e) =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            commitments: prev.commitments.map((item, i) =>
+                              i === idx ? { ...item, start_at: e.target.value } : item
+                            )
+                          }))
+                        }
+                      />
+                      <input
+                        type="datetime-local"
+                        value={commitment.end_at}
+                        onChange={(e) =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            commitments: prev.commitments.map((item, i) =>
+                              i === idx ? { ...item, end_at: e.target.value } : item
+                            )
+                          }))
+                        }
+                      />
+                      <input
+                        placeholder="RRULE"
+                        value={commitment.recurrence_rule}
+                        onChange={(e) =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            commitments: prev.commitments.map((item, i) =>
+                              i === idx ? { ...item, recurrence_rule: e.target.value } : item
+                            )
+                          }))
+                        }
+                      />
+                      <label className="wizard-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={commitment.hard_flag}
+                          onChange={(e) =>
+                            setWizardData((prev) => ({
+                              ...prev,
+                              commitments: prev.commitments.map((item, i) =>
+                                i === idx ? { ...item, hard_flag: e.target.checked } : item
+                              )
+                            }))
+                          }
+                        />
+                        Hard
+                      </label>
+                      <button
+                        className="ghost"
+                        onClick={() =>
+                          setWizardData((prev) => ({
+                            ...prev,
+                            commitments: prev.commitments.filter((_, i) => i !== idx)
+                          }))
+                        }
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {wizardStep === 3 && (
+                <div className="wizard-preview">
+                  <div className="wizard-preview-header">
+                    <div className="wizard-label">Plan Preview</div>
+                    <div className="wizard-mode-toggle">
+                      {"ABC".split("").map((m) => (
+                        <button
+                          key={m}
+                          className={m === wizardMode ? "active" : ""}
+                          onClick={() => {
+                            setWizardMode(m);
+                            loadPreview(m);
+                          }}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {wizardErrors.api && <div className="wizard-error">{wizardErrors.api}</div>}
+                  {!wizardGenerated && (
+                    <div className="wizard-muted">
+                      Generate a plan to preview blocks before activation.
+                    </div>
+                  )}
+                  {wizardPreview && (
+                    <div className="wizard-preview-list">
+                      {(wizardPreview.plan_json?.blocks ?? []).map((block: any) => (
+                        <div key={block.block_id} className="block-card">
+                          <div className="block-title">{block.title}</div>
+                          <div className="block-meta">{block.type}</div>
+                          <div className="block-time">
+                            {block.start_at} → {block.end_at}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="wizard-footer">
+              <div className="wizard-status">{wizardStatus}</div>
+              <div className="wizard-actions">
+                {wizardStep > 0 && <button onClick={prevWizardStep}>Back</button>}
+                {wizardStep < 3 && <button onClick={nextWizardStep}>Next</button>}
+                {wizardStep === 3 && (
+                  <>
+                    <button onClick={generateWizardPlan}>Generate</button>
+                    {wizardGenerated && (
+                      <button className="active" onClick={completeWizard}>
+                        Activate & Enter Console
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

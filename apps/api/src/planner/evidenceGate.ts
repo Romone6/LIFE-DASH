@@ -12,6 +12,8 @@ type PlanBlock = {
 };
 
 type Plan = {
+  plan_id: string;
+  mode: "A" | "B" | "C";
   blocks: PlanBlock[];
 };
 

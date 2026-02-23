@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../../supabase";
-import { computeGovernorState } from "../../governor/engine";
+import { supabaseAdmin } from "../../supabase.js";
+import { computeGovernorState } from "../../governor/engine.js";
 
 const governorRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/v1/governor/state", async (request) => {

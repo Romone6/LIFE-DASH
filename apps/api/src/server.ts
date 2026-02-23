@@ -1,12 +1,12 @@
 import Fastify from "fastify";
-import "./types";
+import "./types.js";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import sensible from "@fastify/sensible";
-import authPlugin from "./plugins/auth";
-import healthRoutes from "./routes/health";
-import v1Routes from "./routes/v1";
+import authPlugin from "./plugins/auth.js";
+import healthRoutes from "./routes/health.js";
+import v1Routes from "./routes/v1/index.js";
 
 export function buildServer() {
   const server = Fastify({

@@ -1,7 +1,7 @@
 import { OpenRouterClient } from "@lifeos/ai-gateway";
-import { env } from "../config";
-import { validateAuditJson } from "./validator";
-import { sha256 } from "../utils/hash";
+import { env } from "../config.js";
+import { validateAuditJson } from "./validator.js";
+import { sha256 } from "../utils/hash.js";
 
 const auditorPromptVersion = "auditor-v1";
 

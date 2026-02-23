@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../../supabase";
-import { buildAuthUrl, exchangeCode, decryptRefreshToken, encryptRefreshToken, refreshToken } from "../../calendar/google";
-import { blockHash, buildEvent, createEvent, deleteEvent, diffBlocks, listCalendars, updateEvent } from "../../calendar/sync";
+import { supabaseAdmin } from "../../supabase.js";
+import { buildAuthUrl, exchangeCode, decryptRefreshToken, encryptRefreshToken, refreshToken } from "../../calendar/google.js";
+import { blockHash, buildEvent, createEvent, deleteEvent, diffBlocks, listCalendars, updateEvent } from "../../calendar/sync.js";
 
 const calendarRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/v1/calendar/connect", async (request, reply) => {

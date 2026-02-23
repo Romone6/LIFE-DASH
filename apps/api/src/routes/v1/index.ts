@@ -1,18 +1,18 @@
 import type { FastifyPluginAsync } from "fastify";
-import profileRoutes from "./profile";
-import planRoutes from "./plans";
-import auditRoutes from "./audit";
-import healthConnectRoutes from "./healthconnect";
-import calendarRoutes from "./calendar";
-import evidenceRoutes from "./evidence";
-import governorRoutes from "./governor";
-import twinRoutes from "./twin";
-import terrainRoutes from "./terrain";
-import experimentRoutes from "./experiments";
-import strategicRoutes from "./strategic";
-import capitalRoutes from "./capital";
-import goalRoutes from "./goals";
-import capitalBucketRoutes from "./capitalBuckets";
+import profileRoutes from "./profile.js";
+import planRoutes from "./plans.js";
+import auditRoutes from "./audit.js";
+import healthConnectRoutes from "./healthconnect.js";
+import calendarRoutes from "./calendar.js";
+import evidenceRoutes from "./evidence.js";
+import governorRoutes from "./governor.js";
+import twinRoutes from "./twin.js";
+import terrainRoutes from "./terrain.js";
+import experimentRoutes from "./experiments.js";
+import strategicRoutes from "./strategic.js";
+import capitalRoutes from "./capital.js";
+import goalRoutes from "./goals.js";
+import capitalBucketRoutes from "./capitalBuckets.js";
 
 const v1Routes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/v1/status", async (request) => {

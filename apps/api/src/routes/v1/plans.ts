@@ -1,13 +1,13 @@
 import type { FastifyPluginAsync } from "fastify";
-import { fetchPlannerInput } from "../../planner/input";
-import { generatePlans } from "../../planner/generator";
-import { persistAiRun, persistPlans } from "../../planner/persist";
-import { runAudit } from "../../auditor/generator";
-import { persistAuditReport, updatePlanAuditStatus } from "../../auditor/persist";
-import { applyEvidenceGate } from "../../planner/evidenceGate";
-import { supabaseAdmin } from "../../supabase";
-import { computeGovernorState } from "../../governor/engine";
-import { generateStabilityPlan } from "../../planner/stabilityPlan";
+import { fetchPlannerInput } from "../../planner/input.js";
+import { generatePlans } from "../../planner/generator.js";
+import { persistAiRun, persistPlans } from "../../planner/persist.js";
+import { runAudit } from "../../auditor/generator.js";
+import { persistAuditReport, updatePlanAuditStatus } from "../../auditor/persist.js";
+import { applyEvidenceGate } from "../../planner/evidenceGate.js";
+import { supabaseAdmin } from "../../supabase.js";
+import { computeGovernorState } from "../../governor/engine.js";
+import { generateStabilityPlan } from "../../planner/stabilityPlan.js";
 
 const planRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/v1/plans/:date/generate", async (request) => {

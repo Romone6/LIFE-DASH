@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../../supabase";
-import { env } from "../../config";
+import { supabaseAdmin } from "../../supabase.js";
+import { env } from "../../config.js";
 
 const evidenceRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/v1/evidence/create", async (request) => {

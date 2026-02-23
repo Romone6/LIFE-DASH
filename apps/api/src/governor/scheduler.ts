@@ -1,5 +1,5 @@
-import { computeGovernorState } from "./engine";
-import { supabaseAdmin } from "../supabase";
+import { computeGovernorState } from "./engine.js";
+import { supabaseAdmin } from "../supabase.js";
 
 export async function runGovernorOnce() {
   const { data: profiles } = await supabaseAdmin.from("profiles").select("user_id");

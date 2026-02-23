@@ -1,9 +1,9 @@
 import { OpenRouterClient } from "@lifeos/ai-gateway";
-import { env } from "../config";
-import { validatePlanJson } from "./validator";
-import { checkPlanIntegrity } from "./integrity";
-import { checkPlanModes, commitmentsImmutable } from "./rules";
-import { sha256 } from "../utils/hash";
+import { env } from "../config.js";
+import { validatePlanJson } from "./validator.js";
+import { checkPlanIntegrity } from "./integrity.js";
+import { checkPlanModes, commitmentsImmutable } from "./rules.js";
+import { sha256 } from "../utils/hash.js";
 
 const promptVersion = "planner-v1";
 

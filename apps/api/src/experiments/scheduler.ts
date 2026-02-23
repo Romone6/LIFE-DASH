@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "../supabase";
+import { supabaseAdmin } from "../supabase.js";
 
 export async function proposeExperiments() {
   const { data: profiles } = await supabaseAdmin.from("profiles").select("user_id");

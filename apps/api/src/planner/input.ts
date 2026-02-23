@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "../supabase";
+import { supabaseAdmin } from "../supabase.js";
 import { parseISO, startOfDay, endOfDay } from "date-fns";
 
 export async function fetchPlannerInput(userId: string, dateLocal: string) {

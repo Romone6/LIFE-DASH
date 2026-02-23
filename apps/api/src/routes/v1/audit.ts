@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../../supabase";
-import { runAudit } from "../../auditor/generator";
-import { persistAuditReport, updatePlanAuditStatus } from "../../auditor/persist";
+import { supabaseAdmin } from "../../supabase.js";
+import { runAudit } from "../../auditor/generator.js";
+import { persistAuditReport, updatePlanAuditStatus } from "../../auditor/persist.js";
 
 const auditRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/v1/audit/:plan_id/run", async (request) => {

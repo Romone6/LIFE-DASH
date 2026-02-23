@@ -1,6 +1,9 @@
-import Ajv from "ajv";
-import addFormats from "ajv-formats";
+import { createRequire } from "module";
 import { planSchema } from "@lifeos/schemas";
+
+const require = createRequire(import.meta.url);
+const Ajv = require("ajv");
+const addFormats = require("ajv-formats");
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);

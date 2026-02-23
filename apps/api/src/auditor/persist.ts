@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "../supabase";
+import { supabaseAdmin } from "../supabase.js";
 
 export async function persistAuditReport(planId: string, report: any, modelId: string) {
   const { error } = await supabaseAdmin.from("audit_reports").insert({

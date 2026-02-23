@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../../supabase";
-import { runCapitalSimulation } from "../../capital/engine";
+import { supabaseAdmin } from "../../supabase.js";
+import { runCapitalSimulation } from "../../capital/engine.js";
 
 const capitalRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/v1/capital/income", async (request) => {

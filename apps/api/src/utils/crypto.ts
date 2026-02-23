@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
-import { env } from "../config";
+import { env } from "../config.js";
 
 const key = createHash("sha256").update(env.GCAL_TOKEN_ENC_KEY).digest();
 

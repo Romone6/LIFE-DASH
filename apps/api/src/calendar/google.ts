@@ -1,5 +1,5 @@
-import { env } from "../config";
-import { decrypt, encrypt } from "../utils/crypto";
+import { env } from "../config.js";
+import { decrypt, encrypt } from "../utils/crypto.js";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";

@@ -1,6 +1,6 @@
 import fp from "fastify-plugin";
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../supabase";
+import { supabaseAdmin } from "../supabase.js";
 
 const authPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.addHook("onRequest", async (request, reply) => {

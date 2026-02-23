@@ -1,4 +1,4 @@
-import { sha256 } from "../utils/hash";
+import { sha256 } from "../utils/hash.js";
 
 export type Block = {
   block_id: string;

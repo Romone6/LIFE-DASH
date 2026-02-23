@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../../supabase";
+import { supabaseAdmin } from "../../supabase.js";
 
 const profileRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/v1/profile/upsert", async (request) => {

@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../../supabase";
-import { computeTerrain } from "../../terrain/engine";
+import { supabaseAdmin } from "../../supabase.js";
+import { computeTerrain } from "../../terrain/engine.js";
 
 const terrainRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/v1/terrain/state", async (request) => {

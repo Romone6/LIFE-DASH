@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../../supabase";
+import { supabaseAdmin } from "../../supabase.js";
 
 const strategicRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/v1/strategic-goals", async (request) => {

@@ -1,5 +1,5 @@
 import { subDays } from "date-fns";
-import { supabaseAdmin } from "../supabase";
+import { supabaseAdmin } from "../supabase.js";
 
 export type GovernorState = {
   burnout_score: number;

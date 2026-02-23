@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { supabaseAdmin } from "../../supabase";
+import { supabaseAdmin } from "../../supabase.js";
 
 const capitalBucketRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/v1/capital/bucket", async (request) => {

@@ -8,6 +8,7 @@ apps/web/.next
 apps/web/out
 apps/api/dist
 packages/**/dist
+apps/worker/dist
 apps/android/.gradle
 apps/android/build
 apps/android/app/build

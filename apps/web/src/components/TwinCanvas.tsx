@@ -6,13 +6,16 @@ export default function TwinCanvas() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const mount = ref.current;
+    if (!mount) return;
+
     let renderer: any;
     let animation: number | null = null;
 
     const init = async () => {
       const THREE = await import("three");
-      const width = ref.current?.clientWidth ?? 300;
-      const height = ref.current?.clientHeight ?? 300;
+      const width = mount.clientWidth ?? 300;
+      const height = mount.clientHeight ?? 300;
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
@@ -20,7 +23,7 @@ export default function TwinCanvas() {
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(width, height);
-      ref.current?.appendChild(renderer.domElement);
+      mount.appendChild(renderer.domElement);
 
       const geometry = new THREE.IcosahedronGeometry(1.2, 1);
       const material = new THREE.MeshStandardMaterial({
@@ -46,8 +49,8 @@ export default function TwinCanvas() {
 
     return () => {
       if (animation) cancelAnimationFrame(animation);
-      if (renderer && ref.current?.firstChild) {
-        ref.current.removeChild(ref.current.firstChild);
+      if (renderer && mount.firstChild) {
+        mount.removeChild(mount.firstChild);
       }
     };
   }, []);

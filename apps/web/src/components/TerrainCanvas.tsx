@@ -6,13 +6,16 @@ export default function TerrainCanvas() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const mount = ref.current;
+    if (!mount) return;
+
     let renderer: any;
     let animation: number | null = null;
 
     const init = async () => {
       const THREE = await import("three");
-      const width = ref.current?.clientWidth ?? 400;
-      const height = ref.current?.clientHeight ?? 220;
+      const width = mount.clientWidth ?? 400;
+      const height = mount.clientHeight ?? 220;
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
@@ -21,7 +24,7 @@ export default function TerrainCanvas() {
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(width, height);
-      ref.current?.appendChild(renderer.domElement);
+      mount.appendChild(renderer.domElement);
 
       const geometry = new THREE.PlaneGeometry(3, 2, 30, 20);
       geometry.rotateX(-Math.PI / 2);
@@ -45,8 +48,8 @@ export default function TerrainCanvas() {
 
     return () => {
       if (animation) cancelAnimationFrame(animation);
-      if (renderer && ref.current?.firstChild) {
-        ref.current.removeChild(ref.current.firstChild);
+      if (renderer && mount.firstChild) {
+        mount.removeChild(mount.firstChild);
       }
     };
   }, []);

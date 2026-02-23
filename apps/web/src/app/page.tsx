@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import TwinCanvas from "../components/TwinCanvas";
 import TerrainCanvas from "../components/TerrainCanvas";
 
@@ -36,7 +36,7 @@ export default function DashboardPage() {
 
   const dateLocal = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     if (!userId) return;
     setStatus("Refreshing...");
     const res = await fetch(`${API_BASE}/v1/plans/${dateLocal}?mode=${mode}`, {
@@ -82,13 +82,13 @@ export default function DashboardPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((payload) => setEvidence(payload?.evidence ?? []))
       .catch(() => setEvidence([]));
-  };
+  }, [dateLocal, mode, userId]);
 
   useEffect(() => {
     const id = setInterval(fetchPlans, 30000);
     fetchPlans();
     return () => clearInterval(id);
-  }, [userId, mode]);
+  }, [fetchPlans]);
 
   const active = plans[0];
 

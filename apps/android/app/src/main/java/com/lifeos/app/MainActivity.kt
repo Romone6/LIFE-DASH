@@ -9,7 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.health.connect.client.permission.PermissionController
+import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.HealthConnectClient
 import com.lifeos.app.auth.AuthRepository
 import com.lifeos.app.healthconnect.HcClient
@@ -39,8 +39,8 @@ fun LifeOSApp() {
   var userId by remember { mutableStateOf("") }
   var permissionsGranted by remember { mutableStateOf(false) }
 
-  val permissionLauncher = rememberLauncherForActivityResult(
-    contract = PermissionController.createRequestPermissionActivityContract()
+  val permissionLauncher = rememberLauncherForActivityResult<Set<String>, Set<String>>(
+    contract = PermissionController.createRequestPermissionResultContract()
   ) { granted ->
     permissionsGranted = granted.containsAll(HcPermissions.required)
   }

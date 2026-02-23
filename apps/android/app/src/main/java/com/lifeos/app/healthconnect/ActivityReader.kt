@@ -38,7 +38,7 @@ class ActivityReader(private val client: HealthConnectClient) {
         title = it.title ?: "Exercise",
         startTime = ZonedDateTime.ofInstant(it.startTime, zoneId).toString(),
         endTime = ZonedDateTime.ofInstant(it.endTime, zoneId).toString(),
-        caloriesBurned = it.totalEnergyBurned?.inKilocalories
+        caloriesBurned = null
       )
     }
 
